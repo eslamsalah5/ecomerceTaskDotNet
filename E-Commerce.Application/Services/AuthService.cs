@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Linq;
 
 namespace E_Commerce.Application.Services
 {
@@ -40,12 +41,16 @@ namespace E_Commerce.Application.Services
 
             // Update last login time
             user.LastLoginTime = DateTime.UtcNow;
+            // Issue refresh token
+            user.RefreshToken = GenerateRefreshToken();
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
             await _userManager.UpdateAsync(user);
 
             var token = await GenerateJwtTokenAsync(user);
             var response = new AuthResponseDto
             {
                 Token = token,
+                RefreshToken = user.RefreshToken!,
                 Email = user.Email!,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -83,10 +88,16 @@ namespace E_Commerce.Application.Services
             // Add Customer role to new users
             await _userManager.AddToRoleAsync(user, "Customer");
 
+            // Issue refresh token
+            user.RefreshToken = GenerateRefreshToken();
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+
             var token = await GenerateJwtTokenAsync(user);
             var response = new AuthResponseDto
             {
                 Token = token,
+                RefreshToken = user.RefreshToken!,
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -96,6 +107,41 @@ namespace E_Commerce.Application.Services
 
             return ApiResponse<AuthResponseDto>.SuccessResult(response, "Registration successful", 201);
         }
+
+        public async Task<ApiResponse<AuthResponseDto>> RefreshTokenAsync(string refreshToken)
+        {
+            var user = _userManager.Users.FirstOrDefault(u => u.RefreshToken == refreshToken);
+            if (user == null || user.RefreshTokenExpiry < DateTime.UtcNow)
+            {
+                return ApiResponse<AuthResponseDto>.ErrorResult("Invalid or expired refresh token", null, 401);
+            }
+            // Issue new tokens
+            user.RefreshToken = GenerateRefreshToken();
+            user.RefreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+            await _userManager.UpdateAsync(user);
+            var token = await GenerateJwtTokenAsync(user);
+            var response = new AuthResponseDto
+            {
+                Token = token,
+                RefreshToken = user.RefreshToken!,
+                Email = user.Email!,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Roles = (await _userManager.GetRolesAsync(user)).ToList(),
+                ExpiresAt = DateTime.UtcNow.AddHours(24)
+            };
+            return ApiResponse<AuthResponseDto>.SuccessResult(response, "Token refreshed", 200);
+        }
+
+        private string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            return Convert.ToBase64String(randomBytes);
+    }
 
         private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
         {
@@ -131,6 +177,36 @@ namespace E_Commerce.Application.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        public async Task<ApiResponse<UserProfileDto>> GetUserProfileAsync(string userId)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return ApiResponse<UserProfileDto>.ErrorResult("User not found", null, 404);
+                }
+
+                var roles = await _userManager.GetRolesAsync(user);
+
+                var userProfile = new UserProfileDto
+                {
+                    Id = user.Id,
+                    Email = user.Email ?? string.Empty,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    LastLoginTime = user.LastLoginTime,
+                    Roles = roles.ToList()
+                };
+
+                return ApiResponse<UserProfileDto>.SuccessResult(userProfile, "User profile retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<UserProfileDto>.ErrorResult($"Error retrieving user profile: {ex.Message}", null, 500);
+            }
         }
     }
 }

@@ -2,6 +2,8 @@ using E_Commerce.Application.Interfaces;
 using E_Commerce.Application.Services;
 using E_Commerce.Domain.Entities;
 using E_Commerce.Infrastructure.Persistence;
+using E_Commerce.Infrastructure.Repositories;
+using E_Commerce.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -38,8 +40,17 @@ public static class DependencyInjection
         // Add SignInManager separately
         services.AddScoped<SignInManager<ApplicationUser>>();
 
+        // Register Repositories
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+        
+        // Register Unit of Work
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         // Register Application Services
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IImageService, ImageService>();
 
         return services;
     }

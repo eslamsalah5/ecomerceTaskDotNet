@@ -8,23 +8,42 @@ public static class SwaggerExtensions
 {
     public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
     {
+        services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "E-Commerce API", Version = "v1" });
-            // JWT Bearer definition (optional but helpful for later)
-            var securityScheme = new OpenApiSecurityScheme
+            c.SwaggerDoc("v1", new OpenApiInfo
             {
+                Title = "E-Commerce API",
+                Version = "v1",
+                Description = "An API for managing E-Commerce products and authentication"
+            });
+
+            // Add JWT authentication to Swagger
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                 Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                Scheme = "bearer",
-                BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "JWT Authorization header using the Bearer scheme."
-            };
-            c.AddSecurityDefinition("Bearer", securityScheme);
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
             c.AddSecurityRequirement(new OpenApiSecurityRequirement
             {
-                { securityScheme, new List<string>() }
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        },
+                        Scheme = "oauth2",
+                        Name = "Bearer",
+                        In = ParameterLocation.Header
+                    },
+                    new List<string>()
+                }
             });
         });
 

@@ -7,5 +7,7 @@ namespace E_Commerce.Application.Interfaces
     {
         Task<ApiResponse<AuthResponseDto>> LoginAsync(LoginDto loginDto);
         Task<ApiResponse<AuthResponseDto>> RegisterAsync(RegisterDto registerDto);
+        Task<ApiResponse<UserProfileDto>> GetUserProfileAsync(string userId);
+        Task<ApiResponse<AuthResponseDto>> RefreshTokenAsync(string refreshToken);
     }
 }

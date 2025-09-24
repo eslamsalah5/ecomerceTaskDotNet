@@ -18,6 +18,9 @@ public class Program
         // Infrastructure (DbContext + Identity)
         builder.Services.AddInfrastructure(builder.Configuration);
 
+        // CORS Configuration
+        builder.Services.AddCorsConfiguration(builder.Configuration);
+
         // Authentication & Swagger
         builder.Services.AddJwtAuthentication(builder.Configuration);
         builder.Services.AddSwaggerDocumentation();
@@ -31,14 +34,24 @@ public class Program
         }
 
         // Configure the HTTP request pipeline.
-        app.UseMiddleware<GlobalExceptionMiddleware>();
-
         if (app.Environment.IsDevelopment())
         {
             app.UseSwaggerDocumentation();
+            app.UseCors("DevPolicy"); // Use permissive policy in development
+            
+            // Configure HTTPS redirection for development
+            app.UseHttpsRedirection();
+        }
+        else
+        {
+            app.UseCors("ECommercePolicy"); // Use restrictive policy in production
+            app.UseHttpsRedirection();
         }
 
-        app.UseHttpsRedirection();
+        app.UseMiddleware<GlobalExceptionMiddleware>();
+
+        // Enable static file serving for uploaded images
+        app.UseStaticFiles();
 
         app.UseAuthentication();
         app.UseAuthorization();

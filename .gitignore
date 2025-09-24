@@ -494,3 +494,32 @@ jspm_packages/
 *.sqlite
 *.db
 *.sqlite3
+
+# IDE/Editor configs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+!README.md
+!IMAGE_UPLOAD_README.md
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore publish profiles
+*.pubxml
+*.publishsettings
+
+# Ignore test coverage
+coverage/
+
+# Ignore generated migrations
+E-Commerce.Infrastructure/Migrations/
+
+# Ignore uploads (optional, uncomment if you don't want to track images)
+# E-Commerce.Api/wwwroot/uploads/
