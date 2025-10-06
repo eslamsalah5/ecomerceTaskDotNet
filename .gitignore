@@ -523,3 +523,8 @@ E-Commerce.Infrastructure/Migrations/
 
 # Ignore uploads (optional, uncomment if you don't want to track images)
 # E-Commerce.Api/wwwroot/uploads/
+
+# Ignore all wwwroot content, keep folders via .gitkeep
+E-Commerce.Api/wwwroot/**
+!E-Commerce.Api/wwwroot/.gitkeep
+!E-Commerce.Api/wwwroot/uploads/.gitkeep
