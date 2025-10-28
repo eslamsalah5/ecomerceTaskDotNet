@@ -10,6 +10,7 @@ namespace E_Commerce.Infrastructure.Repositories
         private IDbContextTransaction? _transaction;
         
         private IProductRepository? _productRepository;
+        private ICartRepository? _cartRepository;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -17,6 +18,7 @@ namespace E_Commerce.Infrastructure.Repositories
         }
 
         public IProductRepository Products => _productRepository ??= new ProductRepository(_context);
+        public ICartRepository Carts => _cartRepository ??= new CartRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

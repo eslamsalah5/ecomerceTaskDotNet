@@ -1,5 +1,7 @@
+using AutoMapper;
 using E_Commerce.Application.DTOs;
 using E_Commerce.Application.Interfaces;
+using E_Commerce.Application.Mappings;
 using E_Commerce.Application.Services;
 using E_Commerce.Domain.Entities;
 using E_Commerce.Domain.Shared;
@@ -14,19 +16,28 @@ namespace E_Commerce.Tests
     {
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
         private readonly Mock<IImageService> _imageServiceMock;
+        private readonly IMapper _mapper;
         private readonly ProductService _productService;
 
         public ProductServiceTests()
         {
             _unitOfWorkMock = new Mock<IUnitOfWork>();
             _imageServiceMock = new Mock<IImageService>();
-            _productService = new ProductService(_unitOfWorkMock.Object, _imageServiceMock.Object);
+            
+            // Setup AutoMapper
+            var config = new MapperConfiguration(cfg => {
+                cfg.AddProfile<ProductMappingProfile>();
+                cfg.AddProfile<CartMappingProfile>();
+            });
+            _mapper = config.CreateMapper();
+            
+            _productService = new ProductService(_unitOfWorkMock.Object, _imageServiceMock.Object, _mapper);
         }
 
         [Fact]
         public async Task GetProductByIdAsync_ReturnsProduct_WhenExists()
         {
-            var product = new Product { Id = 1, Name = "Test", Category = "Cat", ProductCode = "P01", Price = 10, MinimumQuantity = 1 };
+            var product = new Product { Id = 1, Name = "Test", Category = "Cat", ProductCode = "P01", Price = 10, Stock = 100 };
             _unitOfWorkMock.Setup(u => u.Products.GetByIdAsync(1)).ReturnsAsync(product);
             _imageServiceMock.Setup(i => i.GetImageUrl(It.IsAny<string>())).Returns("/img.jpg");
             var result = await _productService.GetProductByIdAsync(1);

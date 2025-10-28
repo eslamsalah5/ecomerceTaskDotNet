@@ -12,5 +12,15 @@ namespace E_Commerce.Domain.Shared
             get => _pageSize;
             set => _pageSize = value > MaxPageSize ? MaxPageSize : value;
         }
+
+        /// <summary>
+        /// Property name to sort by (e.g., "Name", "Price", "CreatedAt")
+        /// </summary>
+        public string? SortBy { get; set; }
+
+        /// <summary>
+        /// Sort direction: "asc" or "desc" (default: "asc")
+        /// </summary>
+        public string SortOrder { get; set; } = "asc";
     }
 }
